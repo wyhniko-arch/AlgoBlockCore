@@ -53,6 +53,7 @@ public class GameObjectStack {
 
     public void pushToBuffer(int value) {
         buffer.offer(value);
+        //System.out.println(buffer.toString());
     }
 
     public Integer popFromBuffer() {

@@ -23,6 +23,8 @@ public class Core {
         instsAllowed = new HashMap<>();
         instsAllowed.put("Queue_pop", 6);
         instsAllowed.put("Queue_add", 6);
+        instsAllowed.put("Stack_push", 6);
+        instsAllowed.put("Stack_pop", 6);
         
         initInsts = Arrays.asList("Queue(A,(1,2,3,4))", "Stack(B)");
         judgeInsts = Arrays.asList(
@@ -65,10 +67,39 @@ public class Core {
     }
 
     public void initAllowedLimits() {
-        for (InstructionDefinition def : registeredInstructions) {
-            String key = def.getStructId() + "_" + def.getInstId();
-            if (instsAllowed.containsKey(key)) {
-                def.setMaxUses(instsAllowed.get(key));
+        // 遍历所有允许玩家使用的指令规则
+        for (Map.Entry<String, Integer> entry : instsAllowed.entrySet()) {
+            String[] parts = entry.getKey().split("_", 2);
+            if(parts.length < 2) continue;
+            String structId = parts[0]; // 例如 Queue
+            String instId = parts[1];   // 例如 pop
+
+            Abstract structTemplate = structureTemplates.get(structId);
+            if (structTemplate != null) {
+                // 通知结构实例：该指令可能需要被玩家使用，若未加载请执行反射动态拉取
+                boolean loaded = structTemplate.loadMethodDynamically(instId);
+                
+                if(loaded) {
+                    // 若加载成功，此时模板的 getRegexPatterns() 会包含这个新方法，将其注册到 Core 层面以备正则匹配使用
+                    String regex = structTemplate.getRegexPatterns().get(instId);
+                    
+                    // 检查是否已经在 registeredInstructions 中
+                    boolean exists = false;
+                    for (InstructionDefinition def : registeredInstructions) {
+                        if (def.getStructId().equals(structId) && def.getInstId().equals(instId)) {
+                            def.setMaxUses(entry.getValue());
+                            exists = true;
+                            break;
+                        }
+                    }
+                    
+                    // 如果是全新动态拉取的，新建定义并赋限制值
+                    if (!exists) {
+                        InstructionDefinition newDef = new InstructionDefinition(structId, instId, regex);
+                        newDef.setMaxUses(entry.getValue());
+                        registeredInstructions.add(newDef);
+                    }
+                }
             }
         }
     }
@@ -77,6 +108,8 @@ public class Core {
         for (InstructionDefinition def : registeredInstructions) {
             Matcher m = def.getRegex().matcher(statement);
             if (m.matches()) {
+                System.out.println(String.format("[尝试执行] %s-%s-语句:%s-说明:即将执行%s操作", 
+                def.getStructId(), def.getInstId(), statement, def.getInstId()));
                 if (isPlayerAction) {
                     // 第3步：检查该语句是否可执行
                     if (def.getMaxUses() > 0 && def.getUsedCount() >= def.getMaxUses()) {

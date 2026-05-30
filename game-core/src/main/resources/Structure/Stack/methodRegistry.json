@@ -1,0 +1,9 @@
+{
+  "init_full": "com.algoblock.Structure.Stack.Method.InitFull",
+  "init_empty": "com.algoblock.Structure.Stack.Method.InitEmpty",
+  "copy": "com.algoblock.Structure.Stack.Method.Copy",
+  "delete": "com.algoblock.Structure.Stack.Method.Delete",
+  "pop": "com.algoblock.Structure.Stack.Method.Pop",
+  "push": "com.algoblock.Structure.Stack.Method.Push",
+  "equal": "com.algoblock.Structure.Stack.Method.Equal"
+}
