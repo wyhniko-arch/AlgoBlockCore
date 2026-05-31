@@ -5,7 +5,7 @@ import java.util.*;
 import java.util.regex.Matcher;
 
 public class Core {
-    private final GameObjectStack stack = new GameObjectStack();
+    private final GameObjectStack stack = new GameObjectStack(this);
     private final List<InstructionDefinition> registeredInstructions = new ArrayList<>();
     private final Map<String, Abstract> structureTemplates = new HashMap<>();
     
@@ -121,7 +121,7 @@ public class Core {
                 
                 // 第4步：执行这个语句，路由分发到具体的Abstract子类
                 Abstract template = structureTemplates.get(def.getStructId());
-                template.executeInstruction(def.getInstId(), statement, stack, this);
+                template.executeInstruction(def.getInstId(), statement, stack);
                 
                 System.out.println(String.format("[执行] %s-%s-语句:%s-说明:完成%s操作", 
                     def.getStructId(), def.getInstId(), statement, def.getInstId()));

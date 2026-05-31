@@ -1,6 +1,5 @@
 package com.algoblock.Structure.Queue.Method;
 
-import com.algoblock.Core;
 import com.algoblock.GameObjectStack;
 import com.algoblock.Structure.Queue.FakeQueue;
 import com.algoblock.Structure.StructureMethod;
@@ -15,7 +14,7 @@ public class Copy implements StructureMethod {
     public String getRegex() { return REGEX; }
 
     @Override
-    public void execute(String fullCommand, GameObjectStack stack, Core core) {
+    public void execute(String fullCommand, GameObjectStack stack) {
         Matcher m = Pattern.compile(REGEX).matcher(fullCommand);
         if (m.matches()) {
             String srcName = m.group(1);

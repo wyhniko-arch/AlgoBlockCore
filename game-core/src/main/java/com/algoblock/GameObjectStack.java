@@ -1,12 +1,20 @@
 package com.algoblock;
-
 import com.algoblock.Structure.Abstract;
+
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Queue;
 
 public class GameObjectStack {
+    private final Core core;
+    public GameObjectStack(Core core) {
+        if (core == null) {
+            throw new IllegalArgumentException("Core instance cannot be null.");
+        }
+        this.core = core;
+    }
+
     // 游戏对象栈：(结构类型, 对象名称) -> 具体对象实例
     private final Map<String, Abstract> objects = new HashMap<>();
     
@@ -79,5 +87,9 @@ public class GameObjectStack {
     
     public boolean isWinConditionMet() {
         return runCheckCount > 0 && runCheckCount == passedCheckCount;
+    }
+        // 供子类在需要触发默认输入/输出时回调执行命令
+    public void triggerEngineCommand(String statement) {
+        core.triggerEngineCommand(statement); // 内部触发不消耗玩家次数
     }
 }

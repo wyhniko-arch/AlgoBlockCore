@@ -1,7 +1,6 @@
 package com.algoblock.Structure.Stack;
 
 import com.algoblock.GameObjectStack;
-import com.algoblock.Core;
 import com.algoblock.Structure.Abstract;
 import com.algoblock.Structure.StructureMethod;
 
@@ -83,10 +82,10 @@ public class FakeStack extends Abstract {
     }
 
     @Override
-    public void executeInstruction(String instId, String fullCommand, GameObjectStack gameObjectStack, Core core) {
+    public void executeInstruction(String instId, String fullCommand, GameObjectStack gameObjectStack) {
         StructureMethod method = loadedMethods.get(instId);
         if (method != null) {
-            method.execute(fullCommand, gameObjectStack, core);
+            method.execute(fullCommand, gameObjectStack);
         }
     }
 }

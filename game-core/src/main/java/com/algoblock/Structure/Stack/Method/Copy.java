@@ -1,6 +1,5 @@
 package com.algoblock.Structure.Stack.Method;
 
-import com.algoblock.Core;
 import com.algoblock.GameObjectStack;
 import com.algoblock.Structure.Stack.FakeStack;
 import com.algoblock.Structure.StructureMethod;
@@ -10,7 +9,7 @@ import java.util.regex.Pattern;
 public class Copy implements StructureMethod {
     private static final String REGEX = "^Stack\\(([a-zA-Z0-9_]+)\\)\\.copy\\(([a-zA-Z0-9_]+)\\)$";
     @Override public String getRegex() { return REGEX; }
-    @Override public void execute(String fullCommand, GameObjectStack stack, Core core) {
+    @Override public void execute(String fullCommand, GameObjectStack stack) {
         Matcher m = Pattern.compile(REGEX).matcher(fullCommand);
         if (m.matches()) {
             FakeStack srcObj = (FakeStack) stack.getObject(FakeStack.TYPE_ID, m.group(1));

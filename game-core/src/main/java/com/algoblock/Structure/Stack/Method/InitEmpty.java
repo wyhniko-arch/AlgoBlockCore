@@ -1,6 +1,5 @@
 package com.algoblock.Structure.Stack.Method;
 
-import com.algoblock.Core;
 import com.algoblock.GameObjectStack;
 import com.algoblock.Structure.Stack.FakeStack;
 import com.algoblock.Structure.StructureMethod;
@@ -16,7 +15,7 @@ public class InitEmpty implements StructureMethod {
     }
     
     @Override 
-    public void execute(String fullCommand, GameObjectStack stack, Core core) {
+    public void execute(String fullCommand, GameObjectStack stack) {
         Matcher m = Pattern.compile(REGEX).matcher(fullCommand);
         if (m.matches()) {
             FakeStack newObj = new FakeStack();

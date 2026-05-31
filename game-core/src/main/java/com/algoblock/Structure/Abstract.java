@@ -1,7 +1,6 @@
 package com.algoblock.Structure;
 
 import com.algoblock.GameObjectStack;
-import com.algoblock.Core;
 import java.util.Map;
 
 public abstract class Abstract {
@@ -18,7 +17,7 @@ public abstract class Abstract {
     /**
      * 结构端分发器：将执行指令路由给具体的动态方法类
      */
-    public abstract void executeInstruction(String instId, String fullCommand, GameObjectStack stack, Core core);
+    public abstract void executeInstruction(String instId, String fullCommand, GameObjectStack stack);
 
     /**
      * [规范化核心机制]：当Core发现配置允许某个指令，但结构尚未加载该指令时，调用此方法进行反射动态加载
