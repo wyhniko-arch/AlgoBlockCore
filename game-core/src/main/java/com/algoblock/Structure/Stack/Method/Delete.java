@@ -1,6 +1,6 @@
 package com.algoblock.Structure.Stack.Method;
 
-import com.algoblock.GameObjectStack;
+import com.algoblock.RuntimeContext;
 import com.algoblock.Structure.Stack.FakeStack;
 import com.algoblock.Structure.StructureMethod;
 import java.util.regex.Matcher;
@@ -15,11 +15,11 @@ public class Delete implements StructureMethod {
     }
     
     @Override 
-    public void execute(String fullCommand, GameObjectStack stack) {
+    public void execute(String fullCommand, RuntimeContext context) {
         Matcher m = Pattern.compile(REGEX).matcher(fullCommand);
         if (m.matches()) {
             // 从游戏对象栈中释放指定的Stack对象
-            stack.removeObject(FakeStack.TYPE_ID, m.group(1));
+            context.removeObject(FakeStack.TYPE_ID, m.group(1));
         }
     }
 }

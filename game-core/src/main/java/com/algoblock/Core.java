@@ -5,7 +5,7 @@ import java.util.*;
 import java.util.regex.Matcher;
 
 public class Core {
-    private final GameObjectStack stack = new GameObjectStack(this);
+    private final RuntimeContext runtimeContext = new RuntimeContext(this);
     private final List<InstructionDefinition> registeredInstructions = new ArrayList<>();
     private final Map<String, Abstract> structureTemplates = new HashMap<>();
     
@@ -35,7 +35,7 @@ public class Core {
             "Stack(ABCDEFG_ABCDEFG_B).delete"
         );
         
-        stack.setBufferConfig("Stack", "B", "Stack(B).push", "Stack(B).pop");
+        runtimeContext.setBufferConfig("Stack", "B", "Stack(B).push", "Stack(B).pop");
         stepsLimit = 6;
         
         System.out.println("[加载] 关卡JSON解析完成，准备注册结构。");
@@ -121,7 +121,7 @@ public class Core {
                 
                 // 第4步：执行这个语句，路由分发到具体的Abstract子类
                 Abstract template = structureTemplates.get(def.getStructId());
-                template.executeInstruction(def.getInstId(), statement, stack);
+                template.executeInstruction(def.getInstId(), statement, runtimeContext);
                 
                 System.out.println(String.format("[执行] %s-%s-语句:%s-说明:完成%s操作", 
                     def.getStructId(), def.getInstId(), statement, def.getInstId()));
@@ -152,7 +152,7 @@ public class Core {
 
         while (currentStep < stepsLimit) {
             System.out.println("\n[步骤1] 归零游戏对象栈的两个变量");
-            stack.resetCheckCounts();
+            runtimeContext.resetCheckCounts();
 
             System.out.println("[步骤2] 等待一个语句输入 (请输入指令，或输入 'exit' 退出测试):");
             String input = scanner.nextLine().trim();
@@ -168,10 +168,10 @@ public class Core {
             }
 
             System.out.println("[步骤6] 清空游戏对象栈的缓冲区");
-            stack.clearBuffer();
+            runtimeContext.clearBuffer();
 
             System.out.println("[步骤7] 判断是否退出大循环");
-            if (stack.isWinConditionMet()) {
+            if (runtimeContext.isWinConditionMet()) {
                 System.out.println("[过关] 判定条件通过！游戏胜利！");
                 break;
             } else {

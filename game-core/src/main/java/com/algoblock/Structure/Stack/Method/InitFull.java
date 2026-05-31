@@ -1,6 +1,6 @@
 package com.algoblock.Structure.Stack.Method;
 
-import com.algoblock.GameObjectStack;
+import com.algoblock.RuntimeContext;
 import com.algoblock.Structure.Stack.FakeStack;
 import com.algoblock.Structure.StructureMethod;
 import java.util.regex.Matcher;
@@ -9,7 +9,7 @@ import java.util.regex.Pattern;
 public class InitFull implements StructureMethod {
     private static final String REGEX = "^Stack\\(([a-zA-Z0-9_]+),\\(([\\d,]*)\\)\\)$";
     @Override public String getRegex() { return REGEX; }
-    @Override public void execute(String fullCommand, GameObjectStack stack) {
+    @Override public void execute(String fullCommand, RuntimeContext context) {
         Matcher m = Pattern.compile(REGEX).matcher(fullCommand);
         if (m.matches()) {
             String objName = m.group(1);
@@ -22,7 +22,7 @@ public class InitFull implements StructureMethod {
                     newObj.pushVal(Integer.parseInt(v));
                 }
             }
-            stack.putObject(FakeStack.TYPE_ID, objName, newObj);
+            context.putObject(FakeStack.TYPE_ID, objName, newObj);
         }
     }
 }

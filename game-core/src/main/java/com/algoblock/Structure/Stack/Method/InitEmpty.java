@@ -1,6 +1,6 @@
 package com.algoblock.Structure.Stack.Method;
 
-import com.algoblock.GameObjectStack;
+import com.algoblock.RuntimeContext;
 import com.algoblock.Structure.Stack.FakeStack;
 import com.algoblock.Structure.StructureMethod;
 import java.util.regex.Matcher;
@@ -15,12 +15,12 @@ public class InitEmpty implements StructureMethod {
     }
     
     @Override 
-    public void execute(String fullCommand, GameObjectStack stack) {
+    public void execute(String fullCommand, RuntimeContext context) {
         Matcher m = Pattern.compile(REGEX).matcher(fullCommand);
         if (m.matches()) {
             FakeStack newObj = new FakeStack();
             newObj.name = m.group(1); // 分配栈对象名称
-            stack.putObject(FakeStack.TYPE_ID, newObj.name, newObj);
+            context.putObject(FakeStack.TYPE_ID, newObj.name, newObj);
         }
     }
 }

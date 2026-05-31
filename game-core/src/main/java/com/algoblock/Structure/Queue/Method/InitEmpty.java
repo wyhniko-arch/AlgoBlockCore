@@ -1,6 +1,6 @@
 package com.algoblock.Structure.Queue.Method;
 
-import com.algoblock.GameObjectStack;
+import com.algoblock.RuntimeContext;
 import com.algoblock.Structure.Queue.FakeQueue;
 import com.algoblock.Structure.StructureMethod;
 
@@ -14,13 +14,13 @@ public class InitEmpty implements StructureMethod {
     public String getRegex() { return REGEX; }
 
     @Override
-    public void execute(String fullCommand, GameObjectStack stack) {
+    public void execute(String fullCommand, RuntimeContext context) {
         Matcher m = Pattern.compile(REGEX).matcher(fullCommand);
         if (m.matches()) {
             String objName = m.group(1);
             FakeQueue newObj = new FakeQueue();
             newObj.name = objName;
-            stack.putObject(FakeQueue.TYPE_ID, objName, newObj);
+            context.putObject(FakeQueue.TYPE_ID, objName, newObj);
         }
     }
 }

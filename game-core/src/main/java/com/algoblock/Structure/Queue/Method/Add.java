@@ -1,6 +1,6 @@
 package com.algoblock.Structure.Queue.Method;
 
-import com.algoblock.GameObjectStack;
+import com.algoblock.RuntimeContext;
 import com.algoblock.Structure.Queue.FakeQueue;
 import com.algoblock.Structure.StructureMethod;
 
@@ -14,16 +14,16 @@ public class Add implements StructureMethod {
     public String getRegex() { return REGEX; }
 
     @Override
-    public void execute(String fullCommand, GameObjectStack stack) {
+    public void execute(String fullCommand, RuntimeContext context) {
         Matcher m = Pattern.compile(REGEX).matcher(fullCommand);
         if (m.matches()) {
             String objName = m.group(1);
-            FakeQueue obj = (FakeQueue) stack.getObject(FakeQueue.TYPE_ID, objName);
+            FakeQueue obj = (FakeQueue) context.getObject(FakeQueue.TYPE_ID, objName);
             if (obj != null) {
-                if (!stack.isBufferTarget(FakeQueue.TYPE_ID, objName)) {
-                    stack.triggerEngineCommand(stack.getBufferInstOut()); 
+                if (!context.isBufferTarget(FakeQueue.TYPE_ID, objName)) {
+                    context.triggerEngineCommand(context.getBufferInstOut()); 
                 }
-                Integer val = stack.popFromBuffer();
+                Integer val = context.popFromBuffer();
                 if (val != null) {
                     obj.enqueue(val);
                 }

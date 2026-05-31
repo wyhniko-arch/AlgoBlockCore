@@ -1,6 +1,6 @@
 package com.algoblock.Structure;
 
-import com.algoblock.GameObjectStack;
+import com.algoblock.RuntimeContext;
 
 public interface StructureMethod {
     /**
@@ -14,5 +14,5 @@ public interface StructureMethod {
      * @param stack       游戏对象栈引用
      * @param core        引擎Core引用，用于回调Buffer指令
      */
-    void execute(String fullCommand, GameObjectStack stack);
+    void execute(String fullCommand, RuntimeContext stack);
 }

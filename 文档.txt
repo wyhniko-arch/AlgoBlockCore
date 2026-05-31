@@ -8,7 +8,7 @@
         |   |   \---com
         |   |       \---algoblock
         |   |           |   Core.java
-        |   |           |   GameObjectStack.java
+        |   |           |   RuntimeContext.java
         |   |           |   InstructionDefinition.java
         |   |           |   Main.java
         |   |           |   
@@ -32,7 +32,7 @@
             \---java
 其中可变的部分从灵活性由高到低排序分别是：algoblock/Structure文件夹内的文件夹名称以及其中java文件的具体内容，
 levels文件夹内关卡json文件的数量以及具体内容，resources/Structure文件夹内registry.json的具体内容（该文件仅用于根据结构id加载结构的路由，
-目前其中内容的正确性存疑）。此外，后续需要增加内容的有GameObjectStack.java中方法的实现（但已写好的接口的方法名称和参数列表不能改变，因为被所有结构依赖）
+目前其中内容的正确性存疑）。此外，后续需要增加内容的有RuntimeContext.java中方法的实现（但已写好的接口的方法名称和参数列表不能改变，因为被所有结构依赖）
 以及是否需要引入新方法，Core.java的逻辑（这对应一个关卡的初始化、大循环、胜利判定、结算）。
 
 接下来详细说明Core.java目前的逻辑：

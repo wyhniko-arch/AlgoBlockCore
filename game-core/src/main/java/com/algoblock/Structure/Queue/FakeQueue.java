@@ -1,6 +1,6 @@
 package com.algoblock.Structure.Queue;
 
-import com.algoblock.GameObjectStack;
+import com.algoblock.RuntimeContext;
 import com.algoblock.Structure.Abstract;
 import com.algoblock.Structure.StructureMethod;
 
@@ -104,11 +104,11 @@ public class FakeQueue extends Abstract {
     }
 
     @Override
-    public void executeInstruction(String instId, String fullCommand, GameObjectStack gameObjectStack) {
+    public void executeInstruction(String instId, String fullCommand, RuntimeContext runtimeContext) {
         StructureMethod method = loadedMethods.get(instId);
         if (method != null) {
             // 将执行权转交给具体的指令类实例
-            method.execute(fullCommand, gameObjectStack);
+            method.execute(fullCommand, runtimeContext);
         } else {
             System.err.println("[拦截] 未能在Queue中找到并执行指令: " + instId);
         }
