@@ -94,21 +94,20 @@ public class FakeQueue extends Abstract {
     }
 
     @Override
-    public Map<String, String> getRegexPatterns() {
-        // 动态收集当前已加载的所有指令的正则表达式
+    public Map<String, String> getPatterns() {
         Map<String, String> patterns = new HashMap<>();
         for (Map.Entry<String, StructureMethod> entry : loadedMethods.entrySet()) {
-            patterns.put(entry.getKey(), entry.getValue().getRegex());
+            patterns.put(entry.getKey(), entry.getValue().getPattern());
         }
         return patterns;
     }
 
     @Override
-    public void executeInstruction(String instId, String fullCommand, RuntimeContext runtimeContext) {
+    public void executeInstruction(String instId, String[] args, RuntimeContext runtimeContext) {
+        // [优化说明]: 此处 loadedMethods 是 HashMap，查找 instId 的时间复杂度为 O(1)
         StructureMethod method = loadedMethods.get(instId);
         if (method != null) {
-            // 将执行权转交给具体的指令类实例
-            method.execute(fullCommand, runtimeContext);
+            method.execute(args, runtimeContext);
         } else {
             System.err.println("[拦截] 未能在Queue中找到并执行指令: " + instId);
         }

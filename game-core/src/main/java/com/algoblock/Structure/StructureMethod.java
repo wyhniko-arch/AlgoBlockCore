@@ -1,18 +1,15 @@
 package com.algoblock.Structure;
-
 import com.algoblock.RuntimeContext;
 
 public interface StructureMethod {
     /**
-     * 获取当前指令关联的正则表达式
+     * 返回带有通配符的模板字符串，例如 "Queue(@).add"
      */
-    String getRegex();
+    String getPattern();
 
     /**
-     * 规范化的执行接口
-     * @param fullCommand 完整正则匹配的字符串
-     * @param stack       游戏对象栈引用
-     * @param core        引擎Core引用，用于回调Buffer指令
+     * @param args   由引擎统一提取的变量参数数组（对应模板中的 @）
+     * @param context 运行时上下文
      */
-    void execute(String fullCommand, RuntimeContext stack);
+    void execute(String[] args, RuntimeContext context);
 }

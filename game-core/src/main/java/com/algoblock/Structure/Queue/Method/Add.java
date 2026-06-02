@@ -4,29 +4,24 @@ import com.algoblock.RuntimeContext;
 import com.algoblock.Structure.Queue.FakeQueue;
 import com.algoblock.Structure.StructureMethod;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 public class Add implements StructureMethod {
-    private static final String REGEX = "^Queue\\(([a-zA-Z0-9_]+)\\)\\.add$";
+    private static final String PATTERN = "Queue(@).add";
 
     @Override
-    public String getRegex() { return REGEX; }
+    public String getPattern() { return PATTERN; }
 
     @Override
-    public void execute(String fullCommand, RuntimeContext context) {
-        Matcher m = Pattern.compile(REGEX).matcher(fullCommand);
-        if (m.matches()) {
-            String objName = m.group(1);
-            FakeQueue obj = (FakeQueue) context.getObject(FakeQueue.TYPE_ID, objName);
-            if (obj != null) {
-                if (!context.isBufferTarget(FakeQueue.TYPE_ID, objName)) {
-                    context.triggerEngineCommand(context.getBufferInstOut()); 
-                }
-                Integer val = context.popFromBuffer();
-                if (val != null) {
-                    obj.enqueue(val);
-                }
+    public void execute(String[] args, RuntimeContext context) {
+        // args[0] 对应模板中唯一的一个 @
+        String objName = args[0];
+        FakeQueue obj = (FakeQueue) context.getObject(FakeQueue.TYPE_ID, objName);
+        if (obj != null) {
+            if (!context.isBufferTarget(FakeQueue.TYPE_ID, objName)) {
+                context.triggerEngineCommand(context.getBufferInstOut()); 
+            }
+            Integer val = context.popFromBuffer();
+            if (val != null) {
+                obj.enqueue(val);
             }
         }
     }

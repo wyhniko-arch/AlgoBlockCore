@@ -4,40 +4,34 @@ import com.algoblock.RuntimeContext;
 import com.algoblock.Structure.Queue.FakeQueue;
 import com.algoblock.Structure.StructureMethod;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 public class Equal implements StructureMethod {
-    private static final String REGEX = "^Queue\\.equal\\(([a-zA-Z0-9_]+),([a-zA-Z0-9_]+)\\)$";
+    private static final String PATTERN = "Queue.equal(@,@)";
 
     @Override
-    public String getRegex() { return REGEX; }
+    public String getPattern() { return PATTERN; }
 
     @Override
-    public void execute(String fullCommand, RuntimeContext context) {
-        Matcher m = Pattern.compile(REGEX).matcher(fullCommand);
-        if (m.matches()) {
-            String nameA = m.group(1);
-            String nameB = m.group(2);
-            FakeQueue objA = (FakeQueue) context.getObject(FakeQueue.TYPE_ID, nameA);
-            FakeQueue objB = (FakeQueue) context.getObject(FakeQueue.TYPE_ID, nameB);
-            
-            // 执行范式6：无论结果如何，必须增加一次判断总数
-            context.incrementRunCheck();
-            if (objA != null && objB != null && objA.size == objB.size) {
-                boolean isEqual = true;
-                // 按队列顺序逐个对比环形数组元素
-                for (int i = 0; i < objA.size; i++) {
-                    int indexA = (objA.head + i) % objA.array.length;
-                    int indexB = (objB.head + i) % objB.array.length;
-                    if (objA.array[indexA] != objB.array[indexB]) {
-                        isEqual = false;
-                        break;
-                    }
+    public void execute(String[] args, RuntimeContext context) {
+        String nameA = args[0];
+        String nameB = args[1];
+        FakeQueue objA = (FakeQueue) context.getObject(FakeQueue.TYPE_ID, nameA);
+        FakeQueue objB = (FakeQueue) context.getObject(FakeQueue.TYPE_ID, nameB);
+        
+        // 执行范式6：无论结果如何，必须增加一次判断总数
+        context.incrementRunCheck();
+        if (objA != null && objB != null && objA.size == objB.size) {
+            boolean isEqual = true;
+            // 按队列顺序逐个对比环形数组元素
+            for (int i = 0; i < objA.size; i++) {
+                int indexA = (objA.head + i) % objA.array.length;
+                int indexB = (objB.head + i) % objB.array.length;
+                if (objA.array[indexA] != objB.array[indexB]) {
+                    isEqual = false;
+                    break;
                 }
-                if (isEqual) {
-                    context.incrementPassedCheck();
-                }
+            }
+            if (isEqual) {
+                context.incrementPassedCheck();
             }
         }
     }

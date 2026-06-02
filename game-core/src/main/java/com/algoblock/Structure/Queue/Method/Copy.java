@@ -4,32 +4,27 @@ import com.algoblock.RuntimeContext;
 import com.algoblock.Structure.Queue.FakeQueue;
 import com.algoblock.Structure.StructureMethod;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 public class Copy implements StructureMethod {
-    private static final String REGEX = "^Queue\\(([a-zA-Z0-9_]+)\\)\\.copy\\(([a-zA-Z0-9_]+)\\)$";
+    private static final String PATTERN = "Queue(@).copy(@)";
 
     @Override
-    public String getRegex() { return REGEX; }
+    public String getPattern() { return PATTERN; }
 
     @Override
-    public void execute(String fullCommand, RuntimeContext context) {
-        Matcher m = Pattern.compile(REGEX).matcher(fullCommand);
-        if (m.matches()) {
-            String srcName = m.group(1);
-            String destName = m.group(2);
-            FakeQueue srcObj = (FakeQueue) context.getObject(FakeQueue.TYPE_ID, srcName);
-            if (srcObj != null) {
-                FakeQueue newObj = new FakeQueue();
-                newObj.name = destName;
-                newObj.array = new int[srcObj.array.length];
-                System.arraycopy(srcObj.array, 0, newObj.array, 0, srcObj.array.length);
-                newObj.head = srcObj.head;
-                newObj.tail = srcObj.tail;
-                newObj.size = srcObj.size;
-                context.putObject(FakeQueue.TYPE_ID, destName, newObj);
-            }
+    public void execute(String[] args, RuntimeContext context) {
+        String srcName = args[0];
+        String destName = args[1];
+        FakeQueue srcObj = (FakeQueue) context.getObject(FakeQueue.TYPE_ID, srcName);
+        if (srcObj != null) {
+            FakeQueue newObj = new FakeQueue();
+            newObj.name = destName;
+            newObj.array = new int[srcObj.array.length];
+            System.arraycopy(srcObj.array, 0, newObj.array, 0, srcObj.array.length);
+            newObj.head = srcObj.head;
+            newObj.tail = srcObj.tail;
+            newObj.size = srcObj.size;
+            context.putObject(FakeQueue.TYPE_ID, destName, newObj);
         }
+        
     }
 }

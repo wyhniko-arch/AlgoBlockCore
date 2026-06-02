@@ -2,47 +2,56 @@ package com.algoblock;
 
 import com.algoblock.Structure.Abstract;
 import java.util.*;
-import java.util.regex.Matcher;
+
+class TerminalUtils {
+    public static final String RESET = "\033[0m";
+    public static final String RED = "\033[31m";
+    public static final String GREEN = "\033[32m";
+    public static final String WHITE = "\033[37m";
+    public static final String GRAY = "\033[90m";
+    public static final String GOLD = "\033[33m";
+
+    public static void clearCurrentLine() { System.out.print("\033[2K\r"); }
+    public static void clearBelowAndRenderUp(int linesToMoveUp, int colsToMoveRight) {
+        System.out.print("\033[" + linesToMoveUp + "A");
+        System.out.print("\r\033[" + colsToMoveRight + "C");
+    }
+}
 
 public class Core {
     private final RuntimeContext runtimeContext = new RuntimeContext(this);
-    private final List<InstructionDefinition> registeredInstructions = new ArrayList<>();
+    
+    private final Map<String, InstructionDefinition> identityToInstruction = new HashMap<>();
+    private final Map<String, List<InstructionDefinition>> structToInstructions = new HashMap<>();
     private final Map<String, Abstract> structureTemplates = new HashMap<>();
     
-    // 关卡数据（模拟JSON解析结果）
     private List<String> structUsed;
     private Map<String, Integer> instsAllowed;
     private List<String> initInsts;
     private List<String> judgeInsts;
     private int stepsLimit;
-    
+
     public void loadLevelConfig() {
-        // [硬编码模拟JSON解析]: 001.json
         structUsed = Arrays.asList("Queue", "Stack");
-        
         instsAllowed = new HashMap<>();
         instsAllowed.put("Queue_pop", 6);
         instsAllowed.put("Queue_add", 6);
-        instsAllowed.put("Stack_push", 6);
-        instsAllowed.put("Stack_pop", 6);
-        
+        instsAllowed.put("Stack_push", 0);
+        instsAllowed.put("Stack_pop", 0);
         initInsts = Arrays.asList("Queue(A,(1,2,3,4))", "Stack(B)");
         judgeInsts = Arrays.asList(
             "Stack(B).copy(ABCDEFG_ABCDEFG_A)",
-            "Stack(ABCDEFG_ABCDEFG_B,(1,3,4,2))",
+            "Stack(ABCDEFG_ABCDEFG_B,(1,3))",
             "Stack.equal(ABCDEFG_ABCDEFG_A,ABCDEFG_ABCDEFG_B)",
             "Stack(ABCDEFG_ABCDEFG_A).delete",
             "Stack(ABCDEFG_ABCDEFG_B).delete"
         );
-        
         runtimeContext.setBufferConfig("Stack", "B", "Stack(B).push", "Stack(B).pop");
         stepsLimit = 6;
-        
-        System.out.println("[加载] 关卡JSON解析完成，准备注册结构。");
     }
 
     public void registerStructures() {
-        // [硬编码模拟registry.json映射关系] -> 使用反射机制实例化
+        System.out.println("\n[Debug] === 阶段一: 加载物理结构与挂载基础指令 ===");
         Map<String, String> registry = new HashMap<>();
         registry.put("Queue", "com.algoblock.Structure.Queue.FakeQueue");
         registry.put("Stack", "com.algoblock.Structure.Stack.FakeStack");
@@ -50,90 +59,288 @@ public class Core {
         for (String struct : structUsed) {
             String fqcn = registry.get(struct);
             try {
-                // 核心解耦：根据FQCN动态加载具体的结构类
                 Abstract structInstance = (Abstract) Class.forName(fqcn).getDeclaredConstructor().newInstance();
                 structureTemplates.put(struct, structInstance);
+                structToInstructions.put(struct, new ArrayList<>());
                 
-                // 收集每个结构的正则表达式，注册到Core
-                Map<String, String> regexMap = structInstance.getRegexPatterns();
-                for (Map.Entry<String, String> entry : regexMap.entrySet()) {
-                    registeredInstructions.add(new InstructionDefinition(struct, entry.getKey(), entry.getValue()));
+                Map<String, String> patternsMap = structInstance.getPatterns();
+                for (Map.Entry<String, String> entry : patternsMap.entrySet()) {
+                    InstructionDefinition def = new InstructionDefinition(struct, entry.getKey(), entry.getValue());
+                    def.setMaxUses(0); // 初始化设为 0
+                    identityToInstruction.put(struct + "_" + entry.getKey(), def);
+                    structToInstructions.get(struct).add(def);
+                    System.out.println("[Debug] -> [" + struct + "] 成功挂载预设指令: " + entry.getKey() + " | Pattern: " + entry.getValue());
                 }
-                System.out.println("[注册] 成功加载结构: " + struct);
             } catch (Exception e) {
-                System.err.println("[错误] 反射加载失败: " + fqcn);
+                System.err.println("[Debug] [异常] 结构体注册严重失败: " + fqcn);
             }
         }
     }
 
     public void initAllowedLimits() {
-        // 遍历所有允许玩家使用的指令规则
+        System.out.println("\n[Debug] === 阶段二: 遍历授权名单更新权限 / 动态拉取新指令 ===");
         for (Map.Entry<String, Integer> entry : instsAllowed.entrySet()) {
-            String[] parts = entry.getKey().split("_", 2);
-            if(parts.length < 2) continue;
-            String structId = parts[0]; // 例如 Queue
-            String instId = parts[1];   // 例如 pop
+            String identityKey = entry.getKey();
+            String[] parts = identityKey.split("_", 2);
+            if (parts.length < 2) continue;
+            String structId = parts[0];
+            String instId = parts[1];
 
-            Abstract structTemplate = structureTemplates.get(structId);
-            if (structTemplate != null) {
-                // 通知结构实例：该指令可能需要被玩家使用，若未加载请执行反射动态拉取
-                boolean loaded = structTemplate.loadMethodDynamically(instId);
-                
-                if(loaded) {
-                    // 若加载成功，此时模板的 getRegexPatterns() 会包含这个新方法，将其注册到 Core 层面以备正则匹配使用
-                    String regex = structTemplate.getRegexPatterns().get(instId);
-                    
-                    // 检查是否已经在 registeredInstructions 中
-                    boolean exists = false;
-                    for (InstructionDefinition def : registeredInstructions) {
-                        if (def.getStructId().equals(structId) && def.getInstId().equals(instId)) {
-                            def.setMaxUses(entry.getValue());
-                            exists = true;
-                            break;
-                        }
-                    }
-                    
-                    // 如果是全新动态拉取的，新建定义并赋限制值
-                    if (!exists) {
-                        InstructionDefinition newDef = new InstructionDefinition(structId, instId, regex);
+            System.out.println("[Debug] 处理授权清单: 结构[" + structId + "] - 指令[" + instId + "] -> 授权配额: " + entry.getValue());
+
+            InstructionDefinition existingDef = identityToInstruction.get(identityKey);
+            System.out.println("[Debug]   |- 预设缓存匹配情况: " + (existingDef != null));
+            
+            if (existingDef != null) {
+                existingDef.setMaxUses(entry.getValue());
+                System.out.println("[Debug]   |- [完毕] 仅更新配额上限");
+            } else {
+                System.out.println("[Debug]   |- 触发向下层架构反射请求");
+                Abstract structTemplate = structureTemplates.get(structId);
+                if (structTemplate != null) {
+                    boolean loaded = structTemplate.loadMethodDynamically(instId);
+                    System.out.println("[Debug]   |- 底层架构反馈加载结果: " + loaded);
+                    if (loaded) {
+                        String pattern = structTemplate.getPatterns().get(instId);
+                        InstructionDefinition newDef = new InstructionDefinition(structId, instId, pattern);
                         newDef.setMaxUses(entry.getValue());
-                        registeredInstructions.add(newDef);
+                        
+                        identityToInstruction.put(identityKey, newDef);
+                        if (!structToInstructions.containsKey(structId)) {
+                            structToInstructions.put(structId, new ArrayList<>());
+                        }
+                        structToInstructions.get(structId).add(newDef);
+                        System.out.println("[Debug]   |- [完毕] 指令已动态组装加入引擎库. Pattern: " + pattern);
                     }
                 }
             }
         }
+    }
+
+    /**
+     * [致命 Bug 修订]: 全字符穷举判定
+     * 解决了截断匹配导致 Queue(A).pop 误命中了 Queue(@) 的问题。
+     */
+    private String[] extractArgumentsFast(InstructionDefinition def, String statement) {
+        String[] literals = def.getLiterals();
+        List<String> args = new ArrayList<>(literals.length - 1);
+        int cursor = 0;
+
+        for (int i = 0; i < literals.length; i++) {
+            String lit = literals[i];
+            if (i == 0) {
+                if (!statement.startsWith(lit)) return null;
+                cursor = lit.length();
+            } else {
+                if (lit.isEmpty()) { 
+                    // 处理末尾直接是 @ 的情况 (例如 Pattern = "@")
+                    args.add(statement.substring(cursor));
+                    cursor = statement.length();
+                } else {
+                    int matchIdx = statement.indexOf(lit, cursor);
+                    if (matchIdx == -1) return null;
+                    args.add(statement.substring(cursor, matchIdx));
+                    cursor = matchIdx + lit.length();
+                }
+            }
+        }
+        
+        // 【核心校验】：确保模式在游标走完时，语句也严丝合缝地被穷尽
+        if (cursor != statement.length()) return null;
+        
+        return args.toArray(new String[0]);
+    }
+
+    private String extractStructId(String statement) {
+        int firstParen = statement.indexOf('(');
+        int firstDot = statement.indexOf('.');
+        if (firstParen != -1 && firstDot != -1) return statement.substring(0, Math.min(firstParen, firstDot));
+        else if (firstParen != -1) return statement.substring(0, firstParen);
+        else if (firstDot != -1) return statement.substring(0, firstDot);
+        return statement;
     }
 
     private boolean executeStatement(String statement, boolean isPlayerAction) {
-        for (InstructionDefinition def : registeredInstructions) {
-            Matcher m = def.getRegex().matcher(statement);
-            if (m.matches()) {
-                System.out.println(String.format("[尝试执行] %s-%s-语句:%s-说明:即将执行%s操作", 
-                def.getStructId(), def.getInstId(), statement, def.getInstId()));
+        System.out.println("[Debug] >>> 引擎开始路由分析语句: " + statement + " | 执行主体: " + (isPlayerAction ? "玩家" : "系统"));
+        
+        String structId = extractStructId(statement);
+        System.out.println("[Debug] -> O(1) 预检定位到的主结构体 ID 为: " + structId);
+        
+        List<InstructionDefinition> defs = structToInstructions.get(structId);
+        if (defs == null) {
+            System.out.println("[Debug] -> [拦截] 未找到结构体 [" + structId + "] 的相关指令库");
+            return false;
+        }
+
+        for (InstructionDefinition def : defs) {
+            // [玩家权限校验 Bug 修复]：执行者是玩家时，若配额不足或为零（系统指令），直接将此模式剔除出匹配范围
+            if (isPlayerAction) {
+                if (def.getMaxUses() <= 0) continue; 
+                if (def.getUsedCount() >= def.getMaxUses()) continue;
+            }
+
+            String[] args = extractArgumentsFast(def, statement);
+            if (args != null) {
+                System.out.println("[Debug] -> [匹配成功] 成功锁定指令!");
+                System.out.println("[Debug]    |- 结构 ID: " + def.getStructId());
+                System.out.println("[Debug]    |- 指令 ID: " + def.getInstId());
+                System.out.println("[Debug]    |- Pattern: " + def.getPattern());
+                System.out.println("[Debug]    |- 提取参数: " + Arrays.toString(args));
+                
                 if (isPlayerAction) {
-                    // 第3步：检查该语句是否可执行
-                    if (def.getMaxUses() > 0 && def.getUsedCount() >= def.getMaxUses()) {
-                        System.out.println("[拦截] 结构" + def.getStructId() + "的指令" + def.getInstId() + "已达到使用上限");
-                        return false;
-                    }
                     def.incrementUsedCount();
+                    System.out.println("[Debug]    |- 玩家已用次数更新: " + def.getUsedCount() + " / " + def.getMaxUses());
                 }
                 
-                // 第4步：执行这个语句，路由分发到具体的Abstract子类
                 Abstract template = structureTemplates.get(def.getStructId());
-                template.executeInstruction(def.getInstId(), statement, runtimeContext);
-                
-                System.out.println(String.format("[执行] %s-%s-语句:%s-说明:完成%s操作", 
-                    def.getStructId(), def.getInstId(), statement, def.getInstId()));
+                System.out.println("[Debug] -> 即将向子结构 [" + def.getStructId() + "] 抛出 executeInstruction 调度");
+                template.executeInstruction(def.getInstId(), args, runtimeContext);
                 return true;
             }
         }
+        
+        System.out.println("[Debug] -> [匹配失败] 该语句与所有合法的模式均不匹配");
         return false;
     }
 
-    // 供子类在需要触发默认输入/输出时回调执行命令
     public void triggerEngineCommand(String statement) {
-        executeStatement(statement, false); // 内部触发不消耗玩家次数
+        System.out.println("[Debug] *** 引擎触发后台隐式命令 ***");
+        executeStatement(statement, false);
+    }
+
+    // ==========================================
+    // 玩家词法交互与渲染引擎模块
+    // ==========================================
+
+    private void generateTokensRecursive(String[] literals, int varIdx, List<String> currentTokens, Set<String> activeVars, List<List<String>> result) {
+        List<String> nextTokens = new ArrayList<>(currentTokens);
+        if (!literals[varIdx].isEmpty()) nextTokens.add(literals[varIdx]);
+        
+        if (varIdx == literals.length - 1) {
+            result.add(nextTokens);
+            return;
+        }
+        for (String var : activeVars) {
+            List<String> pathWithVar = new ArrayList<>(nextTokens);
+            pathWithVar.add(var);
+            generateTokensRecursive(literals, varIdx + 1, pathWithVar, activeVars, result);
+        }
+    }
+
+    private boolean couldBePrefix(String pattern, String input) {
+        String[] literals = pattern.split("@", -1);
+        int inputCursor = 0;
+        for (int i = 0; i < literals.length; i++) {
+            String lit = literals[i];
+            if (inputCursor >= input.length()) return true; 
+            
+            if (i == 0) {
+                if (input.length() < lit.length()) return lit.startsWith(input);
+                if (!input.startsWith(lit)) return false;
+                inputCursor += lit.length();
+            } else {
+                int matchIdx = input.indexOf(lit, inputCursor);
+                if (matchIdx == -1) return true; // 未遇到结尾闭合点，宽容放行
+                inputCursor = matchIdx + lit.length();
+            }
+        }
+        return true;
+    }
+
+    private String interactiveReadCommand(Scanner scanner) {
+        StringBuilder buffer = new StringBuilder();
+        int selectedOptionIndex = 0;
+
+        while (true) {
+            boolean isExactMatch = false;
+            boolean isDeadEnd = true;
+            Set<String> uniqueOptions = new LinkedHashSet<>();
+            
+            for (Map.Entry<String, List<InstructionDefinition>> entry : structToInstructions.entrySet()) {
+                String structId = entry.getKey();
+                // [结构命名空间隔离]：此时 @ 严格与该特定结构的对象群绑定
+                Set<String> activeVars = runtimeContext.getActiveObjectNames(structId);
+
+                for (InstructionDefinition def : entry.getValue()) {
+                    // 预测范围过滤：玩家无法使用的指令不得提供 UI 补全联想
+                    if (def.getMaxUses() > 0 && def.getUsedCount() < def.getMaxUses()) {
+                        
+                        if (!isExactMatch && extractArgumentsFast(def, buffer.toString()) != null) {
+                            isExactMatch = true;
+                            isDeadEnd = false;
+                        }
+
+                        if (isDeadEnd && couldBePrefix(def.getPattern(), buffer.toString())) {
+                            isDeadEnd = false;
+                        }
+
+                        List<List<String>> tokenSequences = new ArrayList<>();
+                        generateTokensRecursive(def.getLiterals(), 0, new ArrayList<>(), activeVars, tokenSequences);
+                        for (List<String> seq : tokenSequences) {
+                            String fullStr = String.join("", seq);
+                            if (fullStr.startsWith(buffer.toString()) && !fullStr.equals(buffer.toString())) {
+                                int currentLen = 0;
+                                for (String token : seq) {
+                                    int start = currentLen;
+                                    int end = currentLen + token.length();
+                                    if (buffer.length() >= start && buffer.length() < end) {
+                                        uniqueOptions.add(token.substring(buffer.length() - start));
+                                        break;
+                                    }
+                                    currentLen += token.length();
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            List<String> optionsList = new ArrayList<>(uniqueOptions);
+            String inputColor = isExactMatch ? TerminalUtils.GREEN : (isDeadEnd ? TerminalUtils.RED : TerminalUtils.WHITE);
+
+            TerminalUtils.clearCurrentLine();
+            System.out.print("\r\033[0J"); 
+            System.out.print("> " + inputColor + buffer.toString() + TerminalUtils.RESET);
+
+            if (!isExactMatch && !optionsList.isEmpty()) {
+                if (optionsList.size() == 1) {
+                    System.out.print(TerminalUtils.GOLD + optionsList.get(0) + TerminalUtils.RESET);
+                } else {
+                    System.out.println();
+                    for (int i = 0; i < optionsList.size(); i++) {
+                        if (i == selectedOptionIndex) {
+                            System.out.println(TerminalUtils.GOLD + "[" + optionsList.get(i) + "]" + TerminalUtils.RESET);
+                        } else {
+                            System.out.println(TerminalUtils.GRAY + optionsList.get(i) + TerminalUtils.RESET);
+                        }
+                    }
+                    TerminalUtils.clearBelowAndRenderUp(optionsList.size(), 2 + buffer.length());
+                }
+            }
+
+            String action = scanner.nextLine().trim();
+
+            if ("enter".equalsIgnoreCase(action)) {
+                System.out.println();
+                return buffer.toString();
+            } else if ("tab".equalsIgnoreCase(action)) {
+                if (!optionsList.isEmpty()) {
+                    int idx = (optionsList.size() == 1) ? 0 : selectedOptionIndex;
+                    buffer.append(optionsList.get(idx));
+                    selectedOptionIndex = 0; 
+                }
+            } else if ("del".equalsIgnoreCase(action)) {
+                if (buffer.length() > 0) buffer.deleteCharAt(buffer.length() - 1);
+                selectedOptionIndex = 0;
+            } else if ("up".equalsIgnoreCase(action)) {
+                selectedOptionIndex = Math.max(0, selectedOptionIndex - 1);
+            } else if ("down".equalsIgnoreCase(action)) {
+                selectedOptionIndex = Math.min(optionsList.size() - 1, selectedOptionIndex + 1);
+            } else if (action.length() == 1) {
+                buffer.append(action);
+                selectedOptionIndex = 0;
+            }
+        }
     }
 
     public void run() {
@@ -154,9 +361,9 @@ public class Core {
             System.out.println("\n[步骤1] 归零游戏对象栈的两个变量");
             runtimeContext.resetCheckCounts();
 
-            System.out.println("[步骤2] 等待一个语句输入 (请输入指令，或输入 'exit' 退出测试):");
-            String input = scanner.nextLine().trim();
-            if ("exit".equalsIgnoreCase(input)) break;
+            System.out.println("[步骤2] 等待一个语句输入 (请输入单字符，或控制命令 [tab, del, enter, up, down]):");
+            String input = interactiveReadCommand(scanner);
+            if ("exit".equalsIgnoreCase(input.trim())) break;
 
             System.out.println("[步骤3] 检查该语句是否可执行");
             boolean executed = executeStatement(input, true);
@@ -164,7 +371,7 @@ public class Core {
             
             System.out.println("[步骤5] 执行完后对judge_insts里的语句顺序逐一执行");
             for (String judge : judgeInsts) {
-                executeStatement(judge, false);
+                executeStatement(judge, false); 
             }
 
             System.out.println("[步骤6] 清空游戏对象栈的缓冲区");
@@ -175,13 +382,13 @@ public class Core {
                 System.out.println("[过关] 判定条件通过！游戏胜利！");
                 break;
             } else {
-                System.out.println("[循环] 判定未通过，继续下一轮。当前消耗步数: " + (currentStep + 1));
+                System.out.println("[循环] 判定未通过，继续循环。剩余步数: " + (stepsLimit - currentStep - 1));
             }
             currentStep++;
         }
         
-        if (currentStep >= stepsLimit) {
-            System.out.println("[失败] 达到最大步数限制，游戏结束。");
+        if (currentStep >= stepsLimit && !runtimeContext.isWinConditionMet()) {
+            System.out.println("[结算] 达到最大步数限制，游戏结束。");
         }
         scanner.close();
     }

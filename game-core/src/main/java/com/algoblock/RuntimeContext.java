@@ -2,50 +2,53 @@ package com.algoblock;
 import com.algoblock.Structure.Abstract;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Queue;
+import java.util.Set;
 
 public class RuntimeContext {
     private final Core core;
-    public RuntimeContext(Core core) {
-        if (core == null) {
-            throw new IllegalArgumentException("Core instance cannot be null.");
-        }
-        this.core = core;
-    }
+    public RuntimeContext(Core core) { this.core = core; }
 
-    // 游戏对象栈：(结构类型, 对象名称) -> 具体对象实例
     private final Map<String, Abstract> objects = new HashMap<>();
-    
-    // 缓冲区，独立于继承体系，只存int
     private final Queue<Integer> buffer = new LinkedList<>();
     
-    // 缓冲指针与默认指令
     private String bufferStruct;
     private String bufferName;
     private String bufferInstIn;
     private String bufferInstOut;
 
-    // 循环打破条件变量（执行范式6的次数，检测通过的次数）
     private int runCheckCount = 0;
     private int passedCheckCount = 0;
 
-    // 生成联合主键
-    private String generateKey(String struct, String name) {
-        return struct + "_" + name;
-    }
+    private String generateKey(String struct, String name) { return struct + "_" + name; }
 
     public void putObject(String struct, String name, Abstract obj) {
+        System.out.println("[Debug] [Context] 注册游戏对象: " + struct + " -> " + name);
         objects.put(generateKey(struct, name), obj);
     }
 
-    public Abstract getObject(String struct, String name) {
-        return objects.get(generateKey(struct, name));
+    public Abstract getObject(String struct, String name) { return objects.get(generateKey(struct, name)); }
+
+    public void removeObject(String struct, String name) { 
+        System.out.println("[Debug] [Context] 抹除游戏对象: " + struct + " -> " + name);
+        objects.remove(generateKey(struct, name)); 
     }
 
-    public void removeObject(String struct, String name) {
-        objects.remove(generateKey(struct, name));
+    /**
+     * [重构点]: 基于结构ID严格过滤命名空间。Queue 的指令只能联想出 Queue 的对象。
+     */
+    public Set<String> getActiveObjectNames(String structId) {
+        Set<String> names = new HashSet<>();
+        for (String key : objects.keySet()) {
+            String[] parts = key.split("_", 2);
+            if (parts.length == 2 && parts[0].equals(structId)) {
+                names.add(parts[1]);
+            }
+        }
+        return names;
     }
 
     public void setBufferConfig(String struct, String name, String instIn, String instOut) {
@@ -55,41 +58,15 @@ public class RuntimeContext {
         this.bufferInstOut = instOut;
     }
 
-    public boolean isBufferTarget(String struct, String name) {
-        return struct.equals(bufferStruct) && name.equals(bufferName);
-    }
-
-    public void pushToBuffer(int value) {
-        buffer.offer(value);
-        //System.out.println(buffer.toString());
-    }
-
-    public Integer popFromBuffer() {
-        return buffer.poll();
-    }
-
-    public void clearBuffer() {
-        buffer.clear();
-    }
-
-    // 暴露默认指令字符串，供Core解析执行
+    public boolean isBufferTarget(String struct, String name) { return struct.equals(bufferStruct) && name.equals(bufferName); }
+    public void pushToBuffer(int value) { buffer.offer(value); }
+    public Integer popFromBuffer() { return buffer.poll(); }
+    public void clearBuffer() { buffer.clear(); }
     public String getBufferInstIn() { return bufferInstIn; }
     public String getBufferInstOut() { return bufferInstOut; }
-
-    // 重置与修改校验变量
-    public void resetCheckCounts() {
-        this.runCheckCount = 0;
-        this.passedCheckCount = 0;
-    }
-
+    public void resetCheckCounts() { this.runCheckCount = 0; this.passedCheckCount = 0; }
     public void incrementRunCheck() { this.runCheckCount++; }
     public void incrementPassedCheck() { this.passedCheckCount++; }
-    
-    public boolean isWinConditionMet() {
-        return runCheckCount > 0 && runCheckCount == passedCheckCount;
-    }
-        // 供子类在需要触发默认输入/输出时回调执行命令
-    public void triggerEngineCommand(String statement) {
-        core.triggerEngineCommand(statement); // 内部触发不消耗玩家次数
-    }
+    public boolean isWinConditionMet() { return runCheckCount > 0 && runCheckCount == passedCheckCount; }
+    public void triggerEngineCommand(String statement) { core.triggerEngineCommand(statement); }
 }

@@ -4,21 +4,15 @@ import com.algoblock.RuntimeContext;
 import com.algoblock.Structure.Queue.FakeQueue;
 import com.algoblock.Structure.StructureMethod;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 public class Delete implements StructureMethod {
-    private static final String REGEX = "^Queue\\(([a-zA-Z0-9_]+)\\)\\.delete$";
+    private static final String PATTERN = "Queue(@).delete";
 
     @Override
-    public String getRegex() { return REGEX; }
+    public String getPattern() { return PATTERN; }
 
     @Override
-    public void execute(String fullCommand, RuntimeContext context) {
-        Matcher m = Pattern.compile(REGEX).matcher(fullCommand);
-        if (m.matches()) {
-            String objName = m.group(1);
-            context.removeObject(FakeQueue.TYPE_ID, objName);
-        }
+    public void execute(String[] args, RuntimeContext context) {
+        String objName = args[0];
+        context.removeObject(FakeQueue.TYPE_ID, objName);
     }
 }

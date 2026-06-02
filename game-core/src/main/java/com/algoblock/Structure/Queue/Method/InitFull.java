@@ -4,29 +4,25 @@ import com.algoblock.RuntimeContext;
 import com.algoblock.Structure.Queue.FakeQueue;
 import com.algoblock.Structure.StructureMethod;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 public class InitFull implements StructureMethod {
-    private static final String REGEX = "^Queue\\(([a-zA-Z0-9_]+),\\(([\\d,]*)\\)\\)$";
+    private static final String PATTERN = "Queue(@,(@))";
 
     @Override
-    public String getRegex() { return REGEX; }
+    public String getPattern() { return PATTERN; }
 
     @Override
-    public void execute(String fullCommand, RuntimeContext context) {
-        Matcher m = Pattern.compile(REGEX).matcher(fullCommand);
-        if (m.matches()) {
-            String objName = m.group(1);
-            String values = m.group(2);
-            FakeQueue newObj = new FakeQueue();
-            newObj.name = objName;
-            if (!values.isEmpty()) {
-                for (String v : values.split(",")) {
-                    newObj.enqueue(Integer.parseInt(v));
-                }
+    public void execute(String[] args, RuntimeContext context) {
+   
+        String objName =args[0];
+        String values = args[1];
+        FakeQueue newObj = new FakeQueue();
+        newObj.name = objName;
+        if (!values.isEmpty()) {
+            for (String v : values.split(",")) {
+                newObj.enqueue(Integer.parseInt(v));
             }
-            context.putObject(FakeQueue.TYPE_ID, objName, newObj);
         }
+        context.putObject(FakeQueue.TYPE_ID, objName, newObj);
+    
     }
 }

@@ -73,19 +73,21 @@ public class FakeStack extends Abstract {
     }
 
     @Override
-    public Map<String, String> getRegexPatterns() {
+    public Map<String, String> getPatterns() {
         Map<String, String> patterns = new HashMap<>();
         for (Map.Entry<String, StructureMethod> entry : loadedMethods.entrySet()) {
-            patterns.put(entry.getKey(), entry.getValue().getRegex());
+            patterns.put(entry.getKey(), entry.getValue().getPattern());
         }
         return patterns;
     }
 
     @Override
-    public void executeInstruction(String instId, String fullCommand, RuntimeContext runtimeContext) {
+    public void executeInstruction(String instId, String[] args, RuntimeContext runtimeContext) {
         StructureMethod method = loadedMethods.get(instId);
         if (method != null) {
-            method.execute(fullCommand, runtimeContext);
+            method.execute(args, runtimeContext);
+        } else {
+            System.err.println("[拦截] 未能在Stack中找到并执行指令: " + instId);
         }
     }
 }

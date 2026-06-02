@@ -1,34 +1,32 @@
 package com.algoblock;
 
-import java.util.regex.Pattern;
-
-/**
- * 封装单条指令的定义，包括结构ID、指令ID、正则表达式以及使用限制状态。
- */
 public class InstructionDefinition {
     private final String structId;
     private final String instId;
-    private final Pattern regex;
+    private final String pattern;
+    // 预处理拆分的常量片段数组
+    private final String[] literals;
     private int usedCount;
     private int maxUses;
 
-    public InstructionDefinition(String structId, String instId, String regexStr) {
+    public InstructionDefinition(String structId, String instId, String patternStr) {
         this.structId = structId;
         this.instId = instId;
-        this.regex = Pattern.compile(regexStr);
+        this.pattern = patternStr;
+        // 使用 -1 保留尾部空字符串，严格划定交替边界
+        this.literals = patternStr.split("@", -1);
         this.usedCount = 0;
-        this.maxUses = 0; // 默认0，代表不受玩家限制或尚未初始化
+        this.maxUses = 0;
     }
 
     public String getStructId() { return structId; }
     public String getInstId() { return instId; }
-    public Pattern getRegex() { return regex; }
+    public String getPattern() { return pattern; }
+    public String[] getLiterals() { return literals; }
     
     public int getUsedCount() { return usedCount; }
     public void incrementUsedCount() { this.usedCount++; }
-    
     public int getMaxUses() { return maxUses; }
     public void setMaxUses(int maxUses) { this.maxUses = maxUses; }
-
     public void resetUses() { this.usedCount = 0; }
 }
