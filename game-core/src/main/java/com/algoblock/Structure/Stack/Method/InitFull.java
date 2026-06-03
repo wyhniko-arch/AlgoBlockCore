@@ -1,8 +1,8 @@
-package com.algoblock.Structure.Stack.Method;
+package com.algoblock.structure.stack.method;
 
 import com.algoblock.RuntimeContext;
-import com.algoblock.Structure.Stack.FakeStack;
-import com.algoblock.Structure.StructureMethod;
+import com.algoblock.structure.StructureMethod;
+import com.algoblock.structure.stack.FakeStack;
 
 public class InitFull implements StructureMethod {
     private static final String PATTERN = "Stack(@,(@))";

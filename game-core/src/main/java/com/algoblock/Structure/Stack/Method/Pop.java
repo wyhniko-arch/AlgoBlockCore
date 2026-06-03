@@ -1,8 +1,8 @@
-package com.algoblock.Structure.Stack.Method;
+package com.algoblock.structure.stack.method;
 
 import com.algoblock.RuntimeContext;
-import com.algoblock.Structure.Stack.FakeStack;
-import com.algoblock.Structure.StructureMethod;
+import com.algoblock.structure.StructureMethod;
+import com.algoblock.structure.stack.FakeStack;
 
 public class Pop implements StructureMethod {
     private static final String PATTERN = "Stack(@).pop";
@@ -14,7 +14,7 @@ public class Pop implements StructureMethod {
             if (obj.top >= 0) {
                 context.pushToBuffer(obj.popVal());
             }
-            if (!context.isBufferTarget(FakeStack.TYPE_ID, objName)) {
+            if (context.getandresetIsPlayerAction()) { //如果是玩家指令则触发连锁
                 context.triggerEngineCommand(context.getBufferInstIn()); 
             }
         }

@@ -1,8 +1,8 @@
-package com.algoblock.Structure.Queue.Method;
+package com.algoblock.structure.queue.method;
 
 import com.algoblock.RuntimeContext;
-import com.algoblock.Structure.Queue.FakeQueue;
-import com.algoblock.Structure.StructureMethod;
+import com.algoblock.structure.StructureMethod;
+import com.algoblock.structure.queue.FakeQueue;
 
 public class Add implements StructureMethod {
     private static final String PATTERN = "Queue(@).add";
@@ -16,7 +16,7 @@ public class Add implements StructureMethod {
         String objName = args[0];
         FakeQueue obj = (FakeQueue) context.getObject(FakeQueue.TYPE_ID, objName);
         if (obj != null) {
-            if (!context.isBufferTarget(FakeQueue.TYPE_ID, objName)) {
+            if (context.getandresetIsPlayerAction()) { //如果是玩家指令则触发连锁
                 context.triggerEngineCommand(context.getBufferInstOut()); 
             }
             Integer val = context.popFromBuffer();

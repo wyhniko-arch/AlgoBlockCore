@@ -1,4 +1,4 @@
-package com.algoblock.Structure;
+package com.algoblock.structure;
 
 import com.algoblock.RuntimeContext;
 import java.util.Map;

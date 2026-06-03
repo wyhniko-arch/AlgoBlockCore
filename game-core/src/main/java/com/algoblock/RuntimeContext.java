@@ -1,12 +1,12 @@
 package com.algoblock;
-import com.algoblock.Structure.Abstract;
-
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
+
+import com.algoblock.structure.Abstract;
 
 public class RuntimeContext {
     private final Core core;
@@ -15,8 +15,7 @@ public class RuntimeContext {
     private final Map<String, Abstract> objects = new HashMap<>();
     private final Queue<Integer> buffer = new LinkedList<>();
     
-    private String bufferStruct;
-    private String bufferName;
+    private boolean isPlayerAction;
     private String bufferInstIn;
     private String bufferInstOut;
 
@@ -51,14 +50,11 @@ public class RuntimeContext {
         return names;
     }
 
-    public void setBufferConfig(String struct, String name, String instIn, String instOut) {
-        this.bufferStruct = struct;
-        this.bufferName = name;
+    public void setBufferConfig(String instIn, String instOut) {
         this.bufferInstIn = instIn;
         this.bufferInstOut = instOut;
     }
 
-    public boolean isBufferTarget(String struct, String name) { return struct.equals(bufferStruct) && name.equals(bufferName); }
     public void pushToBuffer(int value) { buffer.offer(value); }
     public Integer popFromBuffer() { return buffer.poll(); }
     public void clearBuffer() { buffer.clear(); }
@@ -69,4 +65,6 @@ public class RuntimeContext {
     public void incrementPassedCheck() { this.passedCheckCount++; }
     public boolean isWinConditionMet() { return runCheckCount > 0 && runCheckCount == passedCheckCount; }
     public void triggerEngineCommand(String statement) { core.triggerEngineCommand(statement); }
+    public void setIsPlayerAction( boolean isPlayerAction) { this.isPlayerAction = isPlayerAction;}
+    public boolean getandresetIsPlayerAction() { boolean value = this.isPlayerAction; this.isPlayerAction = false; return value; }
 }

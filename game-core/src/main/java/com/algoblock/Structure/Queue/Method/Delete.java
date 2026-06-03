@@ -1,8 +1,8 @@
-package com.algoblock.Structure.Queue.Method;
+package com.algoblock.structure.queue.method;
 
 import com.algoblock.RuntimeContext;
-import com.algoblock.Structure.Queue.FakeQueue;
-import com.algoblock.Structure.StructureMethod;
+import com.algoblock.structure.StructureMethod;
+import com.algoblock.structure.queue.FakeQueue;
 
 public class Delete implements StructureMethod {
     private static final String PATTERN = "Queue(@).delete";

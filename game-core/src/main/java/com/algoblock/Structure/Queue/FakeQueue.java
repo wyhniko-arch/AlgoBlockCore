@@ -1,8 +1,8 @@
-package com.algoblock.Structure.Queue;
+package com.algoblock.structure.queue;
 
 import com.algoblock.RuntimeContext;
-import com.algoblock.Structure.Abstract;
-import com.algoblock.Structure.StructureMethod;
+import com.algoblock.structure.Abstract;
+import com.algoblock.structure.StructureMethod;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -30,13 +30,13 @@ public class FakeQueue extends Abstract {
         this.size = 0;
 
         // [硬编码模拟JSON解析] -> 实际开发中应在初始化时读取 methodRegistry.json
-        methodRegistry.put("init_full", "com.algoblock.Structure.Queue.Method.InitFull");
-        methodRegistry.put("init_empty", "com.algoblock.Structure.Queue.Method.InitEmpty");
-        methodRegistry.put("copy", "com.algoblock.Structure.Queue.Method.Copy");
-        methodRegistry.put("delete", "com.algoblock.Structure.Queue.Method.Delete");
-        methodRegistry.put("equal", "com.algoblock.Structure.Queue.Method.Equal");
-        methodRegistry.put("pop", "com.algoblock.Structure.Queue.Method.Pop");
-        methodRegistry.put("add", "com.algoblock.Structure.Queue.Method.Add");
+        methodRegistry.put("init_full", "com.algoblock.structure.queue.method.InitFull");
+        methodRegistry.put("init_empty", "com.algoblock.structure.queue.method.InitEmpty");
+        methodRegistry.put("copy", "com.algoblock.structure.queue.method.Copy");
+        methodRegistry.put("delete", "com.algoblock.structure.queue.method.Delete");
+        methodRegistry.put("equal", "com.algoblock.structure.queue.method.Equal");
+        methodRegistry.put("pop", "com.algoblock.structure.queue.method.Pop");
+        methodRegistry.put("add", "com.algoblock.structure.queue.method.Add");
 
         // 规范：加载Queue时，仅默认注册基础核心指令，pop和add不在此处预加载
         loadMethodDynamically("init_full");

@@ -1,8 +1,8 @@
-package com.algoblock.Structure.Stack;
+package com.algoblock.structure.stack;
 
 import com.algoblock.RuntimeContext;
-import com.algoblock.Structure.Abstract;
-import com.algoblock.Structure.StructureMethod;
+import com.algoblock.structure.Abstract;
+import com.algoblock.structure.StructureMethod;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -22,13 +22,13 @@ public class FakeStack extends Abstract {
         this.top = -1;
 
         // 模拟解析 JSON
-        methodRegistry.put("init_full", "com.algoblock.Structure.Stack.Method.InitFull");
-        methodRegistry.put("init_empty", "com.algoblock.Structure.Stack.Method.InitEmpty");
-        methodRegistry.put("copy", "com.algoblock.Structure.Stack.Method.Copy");
-        methodRegistry.put("delete", "com.algoblock.Structure.Stack.Method.Delete");
-        methodRegistry.put("equal", "com.algoblock.Structure.Stack.Method.Equal");
-        methodRegistry.put("pop", "com.algoblock.Structure.Stack.Method.Pop");
-        methodRegistry.put("push", "com.algoblock.Structure.Stack.Method.Push");
+        methodRegistry.put("init_full", "com.algoblock.structure.stack.method.InitFull");
+        methodRegistry.put("init_empty", "com.algoblock.structure.stack.method.InitEmpty");
+        methodRegistry.put("copy", "com.algoblock.structure.stack.method.Copy");
+        methodRegistry.put("delete", "com.algoblock.structure.stack.method.Delete");
+        methodRegistry.put("equal", "com.algoblock.structure.stack.method.Equal");
+        methodRegistry.put("pop", "com.algoblock.structure.stack.method.Pop");
+        methodRegistry.put("push", "com.algoblock.structure.stack.method.Push");
 
         // 默认注册不消耗次数的基础指令
         loadMethodDynamically("init_full");
